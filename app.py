@@ -24,7 +24,17 @@ def parse_dice_setting(dice_setting):
     except ValueError:
         st.error("骰子設定格式錯誤，請使用 'XdY' 格式，例如 '1d100'")
         return None, None
-
+#skill setting
+def parse_skills(text):
+        skills = {}
+        for line in text.strip().splitlines():
+            if ":" in line:
+                name, val = line.split(":", 1)
+                try:
+                    skills[name.strip()] = int(val.strip())
+                except ValueError:
+                    pass
+        return skills
 # Initialize Firebase
 if not firebase_admin._apps:
     cred = credentials.Certificate({
@@ -87,13 +97,66 @@ if st.button("進入房間"):
 # Main UI after room join
 if st.session_state.get("in_room"):
     st.header(f"🎲 房間：{st.session_state.room_id}")
+    # --- Skill Input Section ---
+    st.header("📝 Character Skills")
+
+    # Let user define a list of skills
+    with st.form("skill_input_form"):
+        skill_names = st.text_area("Enter skills (one per line, format: SkillName: Points)", 
+            "Spot Hidden: 60\nLibrary Use: 50\nPersuade: 40")
+        submitted = st.form_submit_button("Update Skills")`
+    # Parse skills into dictionary
     
-    st.markdown("### 擲骰區域")
+
+    skills = parse_skills(skill_names)
+    # --- Skill Roll Buttons ---
+    st.header("🎯 Roll for a Skill")
+    for skill, value in skills.items():
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown(f"**{skill}** ({value}%)")
+    with col2:
+        if st.button(f"Roll {skill}"):
+            roll = random.randint(1, 100)
+            result = get_result(roll, value)
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            st.success(f"{skill} Roll: {roll} → {result}")
+            # Add to history
+            st.session_state.roll_history.insert(0, {
+                "time": timestamp,
+                "skill": skill,
+                "roll": roll,
+                "value": value,
+                "result": result
+            })
+    st.markdown("### 自定義擲骰區域")
     pc_name = st.text_input("玩家名稱", value="玩家")
     skill_point = st.number_input("請輸入技能點數", min_value=0, max_value=100, value=50)
     skill_name = st.text_input("技能名稱", value="技能")
     dice_setting = st.text_input("骰子設定 (例如：1d100)", value="1d100")
     num,die = parse_dice_setting(dice_setting)
+    for skill, value in skills.items():
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown(f"**{skill}** ({value}%)")
+    with col2:
+        if st.button(f"Roll {skill}"):
+            for _ in range(num):
+                roll = random.randint(1, die)
+                result = evaluate_result(roll, value)
+                timestamp = time.strftime("%H:%M:%S", time.localtime())
+                record = {
+                "pc_name": pc_name,
+                "skill":skill_name,
+                "roll": roll,
+                "result": result,
+                "skill_point": skill_point,
+                "timestamp": timestamp
+                }
+                # Append to Firebase history
+                history_ref = get_room_ref(st.session_state.room_id).child("history")
+                history_ref.push(record)
+            
     if st.button("擲骰！"):
         for _ in range(num):
             roll = random.randint(1, die)
