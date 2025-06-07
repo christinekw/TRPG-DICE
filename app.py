@@ -20,7 +20,7 @@ def evaluate_result(roll, skill):
 
 
 # Initialize Firebase
-if "firebase_initialized" not in st.session_state:
+if not firebase_admin._apps:
     cred = credentials.Certificate({
         "type": st.secrets.firebase.type,
         "project_id": st.secrets.firebase.project_id,
