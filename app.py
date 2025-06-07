@@ -109,26 +109,6 @@ if st.session_state.get("in_room"):
     
 
     skills = parse_skills(skill_names)
-    # --- Skill Roll Buttons ---
-    st.header("🎯 Roll for a Skill")
-    for skill, value in skills.items():
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.markdown(f"**{skill}** ({value}%)")
-    with col2:
-        if st.button(f"Roll {skill}"):
-            roll = random.randint(1, 100)
-            result = get_result(roll, value)
-            timestamp = datetime.now().strftime("%H:%M:%S")
-            st.success(f"{skill} Roll: {roll} → {result}")
-            # Add to history
-            st.session_state.roll_history.insert(0, {
-                "time": timestamp,
-                "skill": skill,
-                "roll": roll,
-                "value": value,
-                "result": result
-            })
     st.markdown("### 自定義擲骰區域")
     pc_name = st.text_input("玩家名稱", value="玩家")
     skill_point = st.number_input("請輸入技能點數", min_value=0, max_value=100, value=50)
