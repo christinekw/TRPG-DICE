@@ -136,26 +136,26 @@ if st.session_state.get("in_room"):
     dice_setting = st.text_input("骰子設定 (例如：1d100)", value="1d100")
     num,die = parse_dice_setting(dice_setting)
     for skill, value in skills.items():
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.markdown(f"**{skill}** ({value}%)")
-    with col2:
-        if st.button(f"Roll {skill}"):
-            for _ in range(num):
-                roll = random.randint(1, die)
-                result = evaluate_result(roll, value)
-                timestamp = time.strftime("%H:%M:%S", time.localtime())
-                record = {
-                "pc_name": pc_name,
-                "skill":skill_name,
-                "roll": roll,
-                "result": result,
-                "skill_point": skill_point,
-                "timestamp": timestamp
-                }
-                # Append to Firebase history
-                history_ref = get_room_ref(st.session_state.room_id).child("history")
-                history_ref.push(record)
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.markdown(f"**{skill}** ({value}%)")
+        with col2:
+            if st.button(f"Roll {skill}"):
+                for _ in range(num):
+                    roll = random.randint(1, die)
+                    result = evaluate_result(roll, value)
+                    timestamp = time.strftime("%H:%M:%S", time.localtime())
+                    record = {
+                    "pc_name": pc_name,
+                    "skill":skill_name,
+                    "roll": roll,
+                    "result": result,
+                    "skill_point": skill_point,
+                    "timestamp": timestamp
+                    }
+                    # Append to Firebase history
+                    history_ref = get_room_ref(st.session_state.room_id).child("history")
+                    history_ref.push(record)
             
     if st.button("擲骰！"):
         for _ in range(num):
