@@ -28,8 +28,11 @@ def parse_dice_setting(dice_setting):
 def parse_skills(text):
         skills = {}
         for line in text.strip().splitlines():
-            if ":" in line:
-                name, val = line.split(":", 1)
+            if ":" or "：" in line:
+                if ":" in line:
+                    name, val = line.split(":", 1)
+                else:
+                    name, val = line.split("：", 1)
                 try:
                     skills[name.strip()] = int(val.strip())
                 except ValueError:
