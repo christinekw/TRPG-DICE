@@ -104,7 +104,7 @@ if st.session_state.get("in_room"):
     with st.form("skill_input_form"):
         skill_names = st.text_area("Enter skills (one per line, format: SkillName: Points)", 
             "Spot Hidden: 60\nLibrary Use: 50\nPersuade: 40")
-        submitted = st.form_submit_button("Update Skills")`
+        submitted = st.form_submit_button("Update Skills")
     # Parse skills into dictionary
     
 
