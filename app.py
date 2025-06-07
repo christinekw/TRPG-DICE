@@ -130,10 +130,10 @@ if st.session_state.get("in_room"):
                     timestamp = int(time.time())
                     record = {
                     "pc_name": pc_name,
-                    "skill":skill_name,
+                    "skill":skill,
                     "roll": roll,
                     "result": result,
-                    "skill_point": skill_point,
+                    "skill_point": value,
                     "timestamp": timestamp
                     }
                     # Append to Firebase history
