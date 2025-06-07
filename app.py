@@ -1,0 +1,104 @@
+import streamlit as st
+import firebase_admin
+from firebase_admin import credentials, db
+import random
+import time
+# dice functions
+def evaluate_result(roll, skill):
+    if roll == 1:
+        return "🎯 極限成功"
+    elif roll <= skill / 5:
+        return "🎯 極限成功"
+    elif roll <= skill / 2:
+        return "💪 困難成功"
+    elif roll <= skill:
+        return "✅ 一般成功"
+    elif roll >= 96 and skill < 50:
+        return "💀 大失敗"
+    else:
+        return "❌ 失敗"
+
+
+# Initialize Firebase
+if "firebase_initialized" not in st.session_state:
+    cred = credentials.Certificate("firebase_config.json")
+    firebase_admin.initialize_app(cred, {
+        "databaseURL": "https://trpgdice-af12e-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    })
+    st.session_state.firebase_initialized = True
+
+# Helper: Get room ref
+def get_room_ref(room_id):
+    return db.reference(f"rooms/{room_id}")
+
+# UI: Room join/create
+st.title("TRPG 線上擲骰器")
+st.subheader("請輸入房間資訊")
+
+room_id = st.text_input("房間 ID")
+room_password = st.text_input("房間密碼", type="password")
+mode = st.radio("選擇模式", ["加入房間", "創建房間"])
+
+if st.button("進入房間"):
+    if not room_id or not room_password:
+        st.error("請輸入房間 ID 與密碼")
+    else:
+        room_ref = get_room_ref(room_id)
+        room_data = room_ref.get()
+
+        if mode == "創建房間":
+            if room_data:
+                st.error("房間已存在，請選擇加入")
+            else:
+                room_ref.set({
+                    "password": room_password,
+                    "history": []
+                })
+                st.success("房間已建立！")
+                st.session_state.in_room = True
+                st.session_state.room_id = room_id
+        elif mode == "加入房間":
+            if not room_data:
+                st.error("房間不存在")
+            elif room_data.get("password") != room_password:
+                st.error("密碼錯誤")
+            else:
+                st.success("成功進入房間！")
+                st.session_state.in_room = True
+                st.session_state.room_id = room_id
+
+# Main UI after room join
+if st.session_state.get("in_room"):
+    st.header(f"🎲 房間：{st.session_state.room_id}")
+
+    skill_point = st.number_input("請輸入技能點數", min_value=0, max_value=100, value=50)
+
+    if st.button("擲骰！"):
+        roll = random.randint(1, 100)
+        result = evaluate_result(roll, skill_point)
+        timestamp = int(time.time())
+        record = {
+            "roll": roll,
+            "result": result,
+            "skill_point": skill_point,
+            "timestamp": timestamp
+        }
+        # Append to Firebase history
+        history_ref = get_room_ref(st.session_state.room_id).child("history")
+        history_ref.push(record)
+
+    # Load and display history
+    st.markdown("### 擲骰紀錄")
+    history_ref = get_room_ref(st.session_state.room_id).child("history")
+    history = history_ref.get() or {}
+
+    # Sort by time
+    sorted_history = sorted(history.values(), key=lambda x: x['timestamp'], reverse=True)
+
+    for item in sorted_history:
+        st.write(f"🎲 擲出: {item['roll']}，技能值: {item['skill_point']}，結果: {item['result']}")
+
+    # Auto-refresh every 5 sec
+    time.sleep(5)
+    st.rerun()
+
