@@ -81,14 +81,19 @@ if st.button("進入房間"):
 # Main UI after room join
 if st.session_state.get("in_room"):
     st.header(f"🎲 房間：{st.session_state.room_id}")
-
+    
+    st.markdown("### 擲骰區域")
+    pc_name = st.text_input("玩家名稱", value="玩家")
     skill_point = st.number_input("請輸入技能點數", min_value=0, max_value=100, value=50)
-
+    skill_name = st.text_input("技能名稱", value="技能")
+    
     if st.button("擲骰！"):
         roll = random.randint(1, 100)
         result = evaluate_result(roll, skill_point)
         timestamp = int(time.time())
         record = {
+            "pc_name": pc_name,
+            "skill":skill_name,
             "roll": roll,
             "result": result,
             "skill_point": skill_point,
@@ -107,7 +112,7 @@ if st.session_state.get("in_room"):
     sorted_history = sorted(history.values(), key=lambda x: x['timestamp'], reverse=True)
 
     for item in sorted_history:
-        st.write(f"🎲 擲出: {item['roll']}，技能值: {item['skill_point']}，結果: {item['result']}")
+        st.write(f"🎲{item['pc_name']} 進行{item["skill"]}投掷，擲出: {item['roll']}，技能值: {item['skill_point']}，結果: {item['result']}")
 
     # Auto-refresh every 5 sec
     time.sleep(5)
