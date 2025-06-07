@@ -127,7 +127,7 @@ if st.session_state.get("in_room"):
                 for _ in range(num):
                     roll = random.randint(1, die)
                     result = evaluate_result(roll, value)
-                    timestamp = time.strftime("%H:%M:%S", time.localtime())
+                    timestamp = int(time.time())
                     record = {
                     "pc_name": pc_name,
                     "skill":skill_name,
