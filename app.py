@@ -17,7 +17,13 @@ def evaluate_result(roll, skill):
         return "💀 大失敗"
     else:
         return "❌ 失敗"
-
+def parse_dice_setting(dice_setting):
+    try:
+        num, die = map(int, dice_setting.split('d'))
+        return num, die
+    except ValueError:
+        st.error("骰子設定格式錯誤，請使用 'XdY' 格式，例如 '1d100'")
+        return None, None
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -86,22 +92,24 @@ if st.session_state.get("in_room"):
     pc_name = st.text_input("玩家名稱", value="玩家")
     skill_point = st.number_input("請輸入技能點數", min_value=0, max_value=100, value=50)
     skill_name = st.text_input("技能名稱", value="技能")
-    
+    dice_setting = st.text_input("骰子設定 (例如：1d100)", value="1d100")
+    num,die = parse_dice_setting(dice_setting)
     if st.button("擲骰！"):
-        roll = random.randint(1, 100)
-        result = evaluate_result(roll, skill_point)
-        timestamp = int(time.time())
-        record = {
-            "pc_name": pc_name,
-            "skill":skill_name,
-            "roll": roll,
-            "result": result,
-            "skill_point": skill_point,
-            "timestamp": timestamp
-        }
-        # Append to Firebase history
-        history_ref = get_room_ref(st.session_state.room_id).child("history")
-        history_ref.push(record)
+        for _ in range(num):
+            roll = random.randint(1, die)
+            result = evaluate_result(roll, skill_point)
+            timestamp = int(time.time())
+            record = {
+                "pc_name": pc_name,
+                "skill":skill_name,
+                "roll": roll,
+                "result": result,
+                "skill_point": skill_point,
+                "timestamp": timestamp
+            }
+            # Append to Firebase history
+            history_ref = get_room_ref(st.session_state.room_id).child("history")
+            history_ref.push(record)
 
     # Load and display history
     st.markdown("### 擲骰紀錄")
